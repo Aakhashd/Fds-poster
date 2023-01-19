@@ -14,7 +14,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from scipy.optimize import curve_fit
-
 # Load the dataset
 data = pd.read_csv('Ass3data.csv')
 # print the dataset
@@ -57,7 +56,7 @@ for var in num_vars:
     c=c+1
 plt.tight_layout()
 plt.show()
-
+#clustering
 def clusterring(data):
     # Normalize the data using GDP per capita
     data['gdp_per_capita'] = data['GDP'] / data['total_population']
@@ -74,5 +73,43 @@ def clusterring(data):
     plt.xlabel('GDP per capita')
     plt.ylabel('Cluster')
     plt.show()
-    
+def Gaussian_fun(x, a, b):
+    y_res = a*np.exp(-1*b*x**2)
+    return y_res
+def func(x, a, b):
+    return a*np.exp(b*x)
+# Define the error_range function
+def err_ranges(params, cov, x):
+    return np.sqrt(np.diag(cov))*np.abs(x - params)
+def curvefit(data):
+    x_data=data['GDP']
+    y_data=data['Year']
+    x_data = np.asarray(x_data)
+    y_data = np.asarray(y_data)
+    plt.plot(x_data, y_data, 'o')
+    plt.legend()
+    plt.xlabel('GDP')
+    plt.ylabel('Years')
+    params, cov = curve_fit(Gaussian_fun, x_data, y_data)
+    fitA = params[0]
+    fitB = params[1]
+    fity = Gaussian_fun(x_data, fitA, fitB)
+    x_pred = np.linspace(2022, 2030, 2)
+    y_pred = func(x_pred, *params)
+    # Compute the lower and upper limits of the confidence range
+    x_err = err_ranges(params, cov, x_pred)
+    y_err = err_ranges(params, cov, y_pred)
+    y_upper = y_pred + y_err
+    y_lower = y_pred - y_err
+    # Plot the results
+    plt.scatter(data['Year'], data['GDP'], c='blue')
+    plt.plot(x_pred, y_pred, '-r')
+    plt.fill_between(x_pred, y_lower, y_upper, color='gray', alpha=0.2)  
+    plt.xlabel('Year')
+    plt.ylabel('GDP per capita')
+    plt.show()
+    plt.plot(x_data, y_data, '*', label='data')
+    plt.plot(x_data, fity, '-', label='fit')
+    plt.legend()
 clusterring(data1)
+curvefit(data1)
