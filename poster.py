@@ -14,26 +14,24 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from scipy.optimize import curve_fit
+import itertools as iter
 
-
+# Reading the Csv file
 def read_csv(filename):
     # Load the dataset
     data = pd.read_csv(filename)
-    return data,data.T                   
+    return data,data.T    
+               
 data, data_transposed = read_csv("Ass3data.csv")
 data1=data
-# Check the number of Countries we have:
-print("Number of Unique Countries:",len(data["Country_Name"].unique()))
-print("Number of Unique Years:", len(data["Year"].unique()))
-
 num_vars = data.select_dtypes(exclude="O").columns.to_list()
-print("Numerical variables:", num_vars)
-# GDP data
 
+# GDP data
 def plot_yearly_gdp(country_name):
     sns.set_style('darkgrid')
     plt.figure(figsize=(15,5))
-    sns.lineplot(data=data[data.Country_Name == country_name], y='GDP',x='Year')
+    sns.lineplot(data=data[data.Country_Name == country_name],
+                 y='GDP',x='Year')
     plt.title(f"{country_name}: Yearly GDP")
     plt.xticks(data['Year'].unique())
     plt.show()
@@ -44,24 +42,23 @@ plt.figure(figsize=(15,40))
 nrows = len(num_vars)
 ncols = 1
 c = 1 
-
 for var in num_vars:
     if var != 'Year':
         plt.subplot(nrows,ncols, c)
-        data.groupby("Country_Name").mean()[var].sort_values(ascending =False).plot(kind='bar')
+        data.groupby("Country_Name").mean()[var].sort_values(
+            ascending =False).plot(kind='bar')
         plt.title(f"{var} for last 10 Years")
     c=c+1
 plt.tight_layout()
 plt.show()
+
 #clustering
 def clusterring(data):
     # Normalize the data using GDP per capita
     data['gdp_per_capita'] = data['GDP'] / data['total_population']
-
     # Perform clustering using KMeans
     kmeans = KMeans(n_clusters=3)
     kmeans.fit(data[['gdp_per_capita']])
-
     # Predict the cluster for each country
     data['cluster'] = kmeans.predict(data[['gdp_per_capita']])
     # Plot the cluster membership and cluster centers
@@ -69,51 +66,93 @@ def clusterring(data):
     plt.scatter(kmeans.cluster_centers_[:, 0], [0, 1, 2], c='red', marker='x')
     plt.xlabel('GDP per capita')
     plt.ylabel('Cluster')
-    plt.show()
-def Gaussian_fun(x, a, b):
-    y_res = a*np.exp(-1*b*x**2)
-    return y_res
-def func(x, a, b):
-    return a*np.exp(b*x)
-# Define the error_range function
-def err_ranges(params, cov, x):
-    return np.sqrt(np.diag(cov))*np.abs(x - params)
-def curvefit(data):
-    x_data=data['GDP']
-    y_data=data['Year']
-    x_data = np.asarray(x_data)
-    y_data = np.asarray(y_data)
-    plt.plot(y_data, x_data, 'o')
     plt.legend()
-    plt.xlabel('GDP')
-    plt.ylabel('Years')
     plt.show()
     
+data_2=data.drop(['Country_Name'], axis = 1)
+'''function to calculate the error limits'''
+def func(x,a,b,c):
+    return a * np.exp(-(x-b)**2 / c)
 
-def curvefit1(data):
-    x_data=data['GDP']
-    y_data=data['life_expectancy']
-    params, cov = curve_fit(Gaussian_fun, x_data, y_data)
-    fitA = params[0]
-    fitB = params[1]
-    fity = Gaussian_fun(x_data, fitA, fitB)
-    x_pred = np.linspace(2022, 2030, 2)
-    y_pred = func(x_pred, *params)
-    # Compute the lower and upper limits of the confidence range
-    x_err = err_ranges(params, cov, x_pred)
-    y_err = err_ranges(params, cov, y_pred)
-    y_upper = y_pred + y_err
-    y_lower = y_pred - y_err
-    #Plot the results
-    plt.scatter(data['life_expectancy'], data['GDP'], c='blue')
-    plt.plot(x_pred, y_pred, '-r')
-    plt.fill_between(x_pred, y_lower, y_upper, color='gray', alpha=0.2)  
-    plt.xlabel('imports_percentGDP')
-    plt.ylabel('exports_percentGDP')
+'''adding an exponential function'''
+def expoFunc(x,a,b):
+    return a**(x+b)
+
+def err_ranges(x, func, param, sigma):
+    """
+    Calculates the upper and lower limits for the function, parameters and
+    sigmas for single value or array x. Functions values are calculated for 
+    all combinations of +/- sigma and the minimum and maximum is determined.
+    Can be used for all number of parameters and sigmas >=1.
+    
+    This routine can be used in assignment programs.
+    """    
+    # initiate arrays for lower and upper limits
+    lower = func(x, *param)
+    upper = lower    
+    uplow = []   # list to hold upper and lower limits for parameters
+    for p,s in zip(param, sigma):
+        pmin = p - s
+        pmax = p + s
+        uplow.append((pmin, pmax))        
+    pmix = list(iter.product(*uplow))    
+    for p in pmix:
+        y = func(x, *p)
+        lower = np.minimum(lower, y)
+        upper = np.maximum(upper, y)        
+    return lower, upper
+def curvefit(data_2):
+    '''plot for scattering'''
+    plt.scatter(data_2['exports_percentGDP'],data_2['imports_percentGDP'])
+    plt.title('Scatter plot before curve fitting')
+    plt.ylabel('Import in GDP')
+    plt.xlabel('export in GDP')
     plt.show()
-    plt.plot(x_data, y_data, '*', label='data')
-    plt.plot(x_data, fity, '-', label='fit')
+    x_data = data_2['exports_percentGDP']
+    y_data = data_2['imports_percentGDP']
+    #curve fitting for export and import in GDP
+    popt, pcov = curve_fit(expoFunc,data_2['exports_percentGDP'],
+                           data_2['imports_percentGDP'],p0=[1,0],
+                           maxfev=500000)
+    a_opt, b_opt = popt
+    x_mod = np.linspace(min(x_data),max(x_data),100)
+    y_mod = expoFunc(x_mod,a_opt,b_opt)
+    '''plot for scattering after fitting the curve'''
+    plt.scatter(x_data,y_data)
+    plt.plot(x_mod,y_mod,color = 'r')
+    plt.title('Scatter plot after curve fitting')
+    plt.ylabel('Import in GDP')
+    plt.xlabel('Export in GDP')
     plt.legend()
+    #plt.savefig("curvefit_after.png")
+    plt.show()
+# '''plot for scattering'''
+# plt.scatter(data_2['exports_percentGDP'],data_2['imports_percentGDP'])
+# plt.title('Scatter plot before curve fitting')
+# plt.ylabel('Imports in GDP')
+# plt.xlabel('exports in GDP')
+# plt.show()
+
+'''adding an exponential function'''
+def expoFunc(x,a,b):
+    return a**(x+b)
+
+# x_data = data_2['exports_percentGDP']
+# y_data = data_2['imports_percentGDP']
+# #curve fitting for export and import in GDP
+# popt, pcov = curve_fit(expoFunc,data_2['exports_percentGDP'],
+#                        data_2['imports_percentGDP'],p0=[1,0],maxfev=500000)
+# a_opt, b_opt = popt
+# x_mod = np.linspace(min(x_data),max(x_data),100)
+# y_mod = expoFunc(x_mod,a_opt,b_opt)
+# '''plot for scattering after fitting the curve'''
+# plt.scatter(x_data,y_data)
+# plt.plot(x_mod,y_mod,color = 'r')
+# plt.title('Scatter plot after curve fitting')
+# plt.ylabel('Imports in GDP')
+# plt.xlabel('exports in GDP')
+# #plt.savefig("curvefit_after.png")
+# plt.show()
+
 clusterring(data1)
 curvefit(data1)
-curvefit1(data1)
