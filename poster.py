@@ -12,14 +12,15 @@ import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 # Import ploting Libraries
 import seaborn as sns
 import matplotlib.pyplot as plt
-
+from sklearn.cluster import KMeans
+from scipy.optimize import curve_fit
 
 # Load the dataset
-data = pd.read_csv('Ass3dataset.csv')
+data = pd.read_csv('Ass3data.csv')
 # print the dataset
 print("We have 150 Rows and 12 Features")
 data.head()
-
+data1=data
 
 # Check the number of Countries we have:
 print("Number of Unique Countries:",len(data["Country_Name"].unique()))
@@ -36,7 +37,6 @@ country = widgets.Dropdown(
                 )
 @interact(country_name=country)
 def plot_yearly_gdp(country_name):
-    
     sns.set_style('darkgrid')
     plt.figure(figsize=(15,5))
     sns.lineplot(data=data[data.Country_Name == country_name], y='GDP',x='Year')
@@ -57,3 +57,22 @@ for var in num_vars:
     c=c+1
 plt.tight_layout()
 plt.show()
+
+def clusterring(data):
+    # Normalize the data using GDP per capita
+    data['gdp_per_capita'] = data['GDP'] / data['total_population']
+
+    # Perform clustering using KMeans
+    kmeans = KMeans(n_clusters=3)
+    kmeans.fit(data[['gdp_per_capita']])
+
+    # Predict the cluster for each country
+    data['cluster'] = kmeans.predict(data[['gdp_per_capita']])
+    # Plot the cluster membership and cluster centers
+    plt.scatter(data['gdp_per_capita'], data['cluster'], c=data['cluster'])
+    plt.scatter(kmeans.cluster_centers_[:, 0], [0, 1, 2], c='red', marker='x')
+    plt.xlabel('GDP per capita')
+    plt.ylabel('Cluster')
+    plt.show()
+    
+clusterring(data1)
