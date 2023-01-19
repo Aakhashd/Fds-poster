@@ -25,7 +25,7 @@ def read_csv(filename):
 data, data_transposed = read_csv("Ass3data.csv")
 data1=data
 num_vars = data.select_dtypes(exclude="O").columns.to_list()
-
+data_2=data.drop(['Country_Name'], axis = 1)
 # GDP data
 def plot_yearly_gdp(country_name):
     sns.set_style('darkgrid')
@@ -69,7 +69,7 @@ def clusterring(data):
     plt.legend()
     plt.show()
     
-data_2=data.drop(['Country_Name'], axis = 1)
+
 '''function to calculate the error limits'''
 def func(x,a,b,c):
     return a * np.exp(-(x-b)**2 / c)
@@ -78,15 +78,15 @@ def func(x,a,b,c):
 def expoFunc(x,a,b):
     return a**(x+b)
 
+"""
+Calculates the upper and lower limits for the function, parameters and
+sigmas for single value or array x. Functions values are calculated for 
+all combinations of +/- sigma and the minimum and maximum is determined.
+Can be used for all number of parameters and sigmas >=1.
+This routine can be used in assignment programs.
+"""  
 def err_ranges(x, func, param, sigma):
-    """
-    Calculates the upper and lower limits for the function, parameters and
-    sigmas for single value or array x. Functions values are calculated for 
-    all combinations of +/- sigma and the minimum and maximum is determined.
-    Can be used for all number of parameters and sigmas >=1.
-    
-    This routine can be used in assignment programs.
-    """    
+  
     # initiate arrays for lower and upper limits
     lower = func(x, *param)
     upper = lower    
@@ -126,33 +126,10 @@ def curvefit(data_2):
     plt.legend()
     #plt.savefig("curvefit_after.png")
     plt.show()
-# '''plot for scattering'''
-# plt.scatter(data_2['exports_percentGDP'],data_2['imports_percentGDP'])
-# plt.title('Scatter plot before curve fitting')
-# plt.ylabel('Imports in GDP')
-# plt.xlabel('exports in GDP')
-# plt.show()
 
 '''adding an exponential function'''
 def expoFunc(x,a,b):
     return a**(x+b)
-
-# x_data = data_2['exports_percentGDP']
-# y_data = data_2['imports_percentGDP']
-# #curve fitting for export and import in GDP
-# popt, pcov = curve_fit(expoFunc,data_2['exports_percentGDP'],
-#                        data_2['imports_percentGDP'],p0=[1,0],maxfev=500000)
-# a_opt, b_opt = popt
-# x_mod = np.linspace(min(x_data),max(x_data),100)
-# y_mod = expoFunc(x_mod,a_opt,b_opt)
-# '''plot for scattering after fitting the curve'''
-# plt.scatter(x_data,y_data)
-# plt.plot(x_mod,y_mod,color = 'r')
-# plt.title('Scatter plot after curve fitting')
-# plt.ylabel('Imports in GDP')
-# plt.xlabel('exports in GDP')
-# #plt.savefig("curvefit_after.png")
-# plt.show()
 
 clusterring(data1)
 curvefit(data1)
