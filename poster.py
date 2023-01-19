@@ -14,13 +14,14 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from scipy.optimize import curve_fit
-# Load the dataset
-data = pd.read_csv('Ass3data.csv')
-# print the dataset
-print("We have 150 Rows and 12 Features")
-data.head()
-data1=data
 
+
+def read_csv(filename):
+    # Load the dataset
+    data = pd.read_csv(filename)
+    return data,data.T                   
+data, data_transposed = read_csv("Ass3data.csv")
+data1=data
 # Check the number of Countries we have:
 print("Number of Unique Countries:",len(data["Country_Name"].unique()))
 print("Number of Unique Years:", len(data["Year"].unique()))
@@ -28,13 +29,7 @@ print("Number of Unique Years:", len(data["Year"].unique()))
 num_vars = data.select_dtypes(exclude="O").columns.to_list()
 print("Numerical variables:", num_vars)
 # GDP data
-country = widgets.Dropdown(
-                    options=data.Country_Name.unique(),
-                    value='India',
-                    description='Number:',
-                    disabled=False,
-                )
-@interact(country_name=country)
+
 def plot_yearly_gdp(country_name):
     sns.set_style('darkgrid')
     plt.figure(figsize=(15,5))
@@ -42,7 +37,9 @@ def plot_yearly_gdp(country_name):
     plt.title(f"{country_name}: Yearly GDP")
     plt.xticks(data['Year'].unique())
     plt.show()
-
+plot_yearly_gdp('Canada')
+#Bilatral Analysis
+sns.pairplot(data, hue='Country_Name')
 plt.figure(figsize=(15,40))
 nrows = len(num_vars)
 ncols = 1
@@ -86,10 +83,16 @@ def curvefit(data):
     y_data=data['Year']
     x_data = np.asarray(x_data)
     y_data = np.asarray(y_data)
-    plt.plot(x_data, y_data, 'o')
+    plt.plot(y_data, x_data, 'o')
     plt.legend()
     plt.xlabel('GDP')
     plt.ylabel('Years')
+    plt.show()
+    
+
+def curvefit1(data):
+    x_data=data['GDP']
+    y_data=data['life_expectancy']
     params, cov = curve_fit(Gaussian_fun, x_data, y_data)
     fitA = params[0]
     fitB = params[1]
@@ -101,15 +104,16 @@ def curvefit(data):
     y_err = err_ranges(params, cov, y_pred)
     y_upper = y_pred + y_err
     y_lower = y_pred - y_err
-    # Plot the results
-    plt.scatter(data['Year'], data['GDP'], c='blue')
+    #Plot the results
+    plt.scatter(data['life_expectancy'], data['GDP'], c='blue')
     plt.plot(x_pred, y_pred, '-r')
     plt.fill_between(x_pred, y_lower, y_upper, color='gray', alpha=0.2)  
-    plt.xlabel('Year')
-    plt.ylabel('GDP per capita')
+    plt.xlabel('imports_percentGDP')
+    plt.ylabel('exports_percentGDP')
     plt.show()
     plt.plot(x_data, y_data, '*', label='data')
     plt.plot(x_data, fity, '-', label='fit')
     plt.legend()
 clusterring(data1)
 curvefit(data1)
+curvefit1(data1)
