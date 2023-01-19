@@ -6,7 +6,6 @@ Created on Wed Jan 11 11:16:07 2023
 @author: aakhashd
 """
 
-from ipywidgets import interact,widgets # for interactive visualization
 import numpy as np # linear algebra
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 # Import ploting Libraries
@@ -52,7 +51,7 @@ for var in num_vars:
 plt.tight_layout()
 plt.show()
 
-#clustering
+#K means clustering
 def clusterring(data):
     # Normalize the data using GDP per capita
     data['gdp_per_capita'] = data['GDP'] / data['total_population']
@@ -67,6 +66,15 @@ def clusterring(data):
     plt.xlabel('GDP per capita')
     plt.ylabel('Cluster')
     plt.legend()
+    plt.show()
+    x_data=data['GDP']
+    y_data=data['Year']
+    x_data = np.asarray(x_data)
+    y_data = np.asarray(y_data)
+    plt.plot(x_data, y_data, 'o')
+    plt.title("GDP of years")
+    plt.xlabel("Year")
+    plt.ylabel("GDP")
     plt.show()
     
 
@@ -101,6 +109,8 @@ def err_ranges(x, func, param, sigma):
         lower = np.minimum(lower, y)
         upper = np.maximum(upper, y)        
     return lower, upper
+
+#Curve fitting
 def curvefit(data_2):
     '''plot for scattering'''
     plt.scatter(data_2['exports_percentGDP'],data_2['imports_percentGDP'])
@@ -124,7 +134,7 @@ def curvefit(data_2):
     plt.ylabel('Import in GDP')
     plt.xlabel('Export in GDP')
     plt.legend()
-    #plt.savefig("curvefit_after.png")
+    plt.savefig("curvefit_after.png")
     plt.show()
 
 '''adding an exponential function'''
