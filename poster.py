@@ -139,4 +139,5 @@ def curvefit(data_2):
 
 #Clustering of data
 clusterring(data1)
+#Curve and error range
 curvefit(data1)
