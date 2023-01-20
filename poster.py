@@ -137,9 +137,6 @@ def curvefit(data_2):
     plt.savefig("curvefit_after.png")
     plt.show()
 
-'''adding an exponential function'''
-def expoFunc(x,a,b):
-    return a**(x+b)
-
+#Clustering of data
 clusterring(data1)
 curvefit(data1)
